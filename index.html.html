@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mycie zębów 🪥</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #dff6ff, #f7e8ff);
+      color: #222;
+    }
+
+    .app {
+      width: min(90%, 520px);
+      padding: 40px 28px;
+      text-align: center;
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 15px 50px rgba(0,0,0,.12);
+    }
+
+    h1 {
+      font-size: 34px;
+      margin: 0 0 30px;
+    }
+
+    .emoji {
+      font-size: 70px;
+      margin-bottom: 15px;
+    }
+
+    .timer {
+      font-size: 72px;
+      font-weight: bold;
+      font-variant-numeric: tabular-nums;
+      margin: 25px 0 35px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 16px 24px;
+      margin: 7px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform .12s, opacity .12s;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+    }
+
+    button:active {
+      transform: scale(.98);
+    }
+
+    .yes {
+      background: #35c759;
+      color: white;
+      min-width: 180px;
+    }
+
+    .pause {
+      background: #ffd60a;
+      color: #222;
+    }
+
+    .finish {
+      background: #ff453a;
+      color: white;
+    }
+
+    .back {
+      background: #e5e5ea;
+      color: #222;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .message {
+      font-size: 20px;
+      line-height: 1.5;
+      margin: 20px 0;
+    }
+
+    .result-time {
+      font-size: 32px;
+      font-weight: bold;
+      margin: 20px 0;
+    }
+
+    #confirmBox {
+      margin-top: 25px;
+      padding: 22px;
+      border-radius: 20px;
+      background: #fff3cd;
+      border: 2px solid #ffd60a;
+    }
+
+    #confirmBox h2 {
+      margin-top: 0;
+    }
+
+    .warning {
+      color: #9a6700;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <main class="app">
+
+    <!-- EKRAN STARTOWY -->
+    <section id="startScreen">
+      <div class="emoji">🪥</div>
+      <h1>Zaczynasz się myć?</h1>
+      <button class="yes" onclick="startBrushing()">TAK!</button>
+    </section>
+
+    <!-- EKRAN STOPERA -->
+    <section id="timerScreen" class="hidden">
+      <div class="emoji">🦷</div>
+      <h1>Mycie zębów</h1>
+
+      <div id="timer" class="timer">00:00</div>
+
+      <button id="pauseButton" class="pause" onclick="togglePause()">
+        ⏸️ Pauzuj stoper
+      </button>
+
+      <button class="finish" onclick="askToFinish()">
+        🪥 Zakończ mycie
+      </button>
+
+      <!-- POTWIERDZENIE -->
+      <div id="confirmBox" class="hidden">
+        <h2>⚠️ Chwileczkę!</h2>
+        <p class="message">
+          Czy na pewno umyłaś zęby?
+        </p>
+        <p class="warning">
+          Nie oszukuj! 😈🦷
+        </p>
+
+        <button class="yes" onclick="finishBrushing()">
+          Tak, umyłam
+        </button>
+
+        <button class="back" onclick="cancelFinish()">
+          Jeszcze nie!
+        </button>
+      </div>
+    </section>
+
+    <!-- EKRAN KOŃCOWY -->
+    <section id="doneScreen" class="hidden">
+      <div class="emoji">✨🦷✨</div>
+      <h1>Gotowe!</h1>
+
+      <p class="message">
+        Brawo! Zęby umyte! 🎉
+      </p>
+
+      <p>Twój czas mycia:</p>
+      <div id="resultTime" class="result-time">00:00</div>
+
+      <button class="yes" onclick="resetApp()">
+        🔄 Umyj ponownie
+      </button>
+    </section>
+
+  </main>
+
+  <script>
+    let seconds = 0;
+    let timerInterval = null;
+    let paused = false;
+
+    const timerElement = document.getElementById("timer");
+    const pauseButton = document.getElementById("pauseButton");
+    const confirmBox = document.getElementById("confirmBox");
+
+    function formatTime(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+
+      return String(minutes).padStart(2, "0") + ":" +
+             String(secs).padStart(2, "0");
+    }
+
+    function updateTimer() {
+      timerElement.textContent = formatTime(seconds);
+    }
+
+    function startBrushing() {
+      document.getElementById("startScreen").classList.add("hidden");
+      document.getElementById("timerScreen").classList.remove("hidden");
+
+      seconds = 0;
+      paused = false;
+      updateTimer();
+
+      clearInterval(timerInterval);
+
+      timerInterval = setInterval(() => {
+        if (!paused) {
+          seconds++;
+          updateTimer();
+        }
+      }, 1000);
+    }
+
+    function togglePause() {
+      paused = !paused;
+
+      if (paused) {
+        pauseButton.textContent = "▶️ Wznów stoper";
+      } else {
+        pauseButton.textContent = "⏸️ Pauzuj stoper";
+      }
+    }
+
+    function askToFinish() {
+      confirmBox.classList.remove("hidden");
+    }
+
+    function cancelFinish() {
+      confirmBox.classList.add("hidden");
+    }
+
+    function finishBrushing() {
+      clearInterval(timerInterval);
+
+      document.getElementById("timerScreen").classList.add("hidden");
+      document.getElementById("doneScreen").classList.remove("hidden");
+
+      document.getElementById("resultTime").textContent =
+        formatTime(seconds);
+    }
+
+    function resetApp() {
+      document.getElementById("doneScreen").classList.add("hidden");
+      document.getElementById("startScreen").classList.remove("hidden");
+
+      seconds = 0;
+      paused = false;
+      confirmBox.classList.add("hidden");
+      pauseButton.textContent = "⏸️ Pauzuj stoper";
+      updateTimer();
+    }
+  </script>
+
+</body>
+</html>
